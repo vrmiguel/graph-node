@@ -34,7 +34,9 @@ type LightEthereumBlock = Block<Transaction>;
 pub enum MappingTrigger {
     Log {
         block: Arc<LightEthereumBlock>,
-        transaction: Arc<Transaction>,
+
+        // For why this is optional see ca0edc58-0ec5-4c89-a7dd-2241797f5e50.
+        transaction: Option<Arc<Transaction>>,
         log: Arc<Log>,
         params: Vec<LogParam>,
         handler: MappingEventHandler,
@@ -59,7 +61,7 @@ impl std::fmt::Debug for MappingTrigger {
         #[derive(Debug)]
         pub enum MappingTriggerWithoutBlock {
             Log {
-                transaction: Arc<Transaction>,
+                transaction: Option<Arc<Transaction>>,
                 log: Arc<Log>,
                 params: Vec<LogParam>,
                 handler: MappingEventHandler,
@@ -149,7 +151,8 @@ impl blockchain::MappingTrigger for MappingTrigger {
                         heap,
                         &EthereumEventData {
                             block: EthereumBlockData::from(block.as_ref()),
-                            transaction: EthereumTransactionData::from(transaction.deref()),
+                            transaction: transaction
+                                .map(|tx| EthereumTransactionData::from(tx.deref())),
                             address: log.address,
                             log_index: log.log_index.unwrap_or(U256::zero()),
                             transaction_log_index: log.log_index.unwrap_or(U256::zero()),
@@ -163,7 +166,8 @@ impl blockchain::MappingTrigger for MappingTrigger {
                         heap,
                         &EthereumEventData {
                             block: EthereumBlockData::from(block.as_ref()),
-                            transaction: EthereumTransactionData::from(transaction.deref()),
+                            transaction: transaction
+                                .map(|tx| EthereumTransactionData::from(tx.deref())),
                             address: log.address,
                             log_index: log.log_index.unwrap_or(U256::zero()),
                             transaction_log_index: log.log_index.unwrap_or(U256::zero()),
@@ -397,7 +401,7 @@ pub struct EthereumEventData {
     pub transaction_log_index: U256,
     pub log_type: Option<String>,
     pub block: EthereumBlockData,
-    pub transaction: EthereumTransactionData,
+    pub transaction: Option<EthereumTransactionData>,
     pub params: Vec<LogParam>,
 }
 

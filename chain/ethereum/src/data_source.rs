@@ -480,11 +480,19 @@ impl DataSource {
                     )
                 );
 
-                let transaction = Arc::new(
-                    block
-                        .transaction_for_log(&log)
-                        .context("Found no transaction for event")?,
-                );
+                // Special case: In Celo, there are Epoch Rewards events, which do not have an
+                // associated transaction and instead have `transaction_hash == block.hash`,
+                // in which case the transaction passed to the mappings will be `null`.
+                // See also ca0edc58-0ec5-4c89-a7dd-2241797f5e50.
+                let transaction = if log.transaction_hash != block.hash {
+                    Some(Arc::new(
+                        block
+                            .transaction_for_log(&log)
+                            .context("Found no transaction for event")?,
+                    ))
+                } else {
+                    None
+                };
 
                 Ok(Some(MappingTrigger::Log {
                     block,

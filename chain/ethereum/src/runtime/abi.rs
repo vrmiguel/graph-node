@@ -236,11 +236,15 @@ where
             )?,
             log_type: self
                 .log_type
-                .clone()
-                .map(|log_type| asc_new(heap, &log_type))
+                .as_ref()
+                .map(|log_type| asc_new(heap, log_type))
                 .unwrap_or(Ok(AscPtr::null()))?,
             block: asc_new(heap, &self.block)?,
-            transaction: asc_new::<T, EthereumTransactionData, _>(heap, &self.transaction)?,
+            transaction: self
+                .transaction
+                .as_ref()
+                .map(|tx| asc_new::<T, EthereumTransactionData, _>(heap, tx))
+                .unwrap_or(Ok(AscPtr::null()))?,
             params: asc_new(heap, self.params.as_slice())?,
         })
     }
